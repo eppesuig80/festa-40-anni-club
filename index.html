@@ -73,7 +73,33 @@ function generatePdf(font='helvetica',fontSize=9){const {jsPDF}=window.jspdf,row
 function buildPrintArea(){const rows=sortRows(reservations,'surname-asc'),notes=$('#includeNotes').checked;$('#printArea').innerHTML=`<h1>${esc(EVENT_TITLE)}</h1><p>Posti massimi: ${maxSeats} &nbsp; Totale persone: ${total()} &nbsp; Posti disponibili: ${maxSeats-total()}</p><table><thead><tr><th>Nome e cognome</th><th>Numero persone</th>${notes?'<th>Note</th>':''}</tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.fullName)}</td><td>${r.seats}</td>${notes?`<td>${esc(r.notes)}</td>`:''}</tr>`).join('')}</tbody><tfoot><tr><th>TOTALE PERSONE</th><th>${total()}</th>${notes?'<th></th>':''}</tr></tfoot></table>`}
 function openPrintPreview(){const rows=sortRows(reservations,'surname-asc'),notes=$('#includeNotes').checked;$('#modalHost').innerHTML=`<div class="modal-bg"><div class="modal"><div class="modal-head"><h2>ANTEPRIMA STAMPA</h2><button class="icon-btn" data-close>✕</button></div><div style="margin-top:14px;max-height:55dvh;overflow:auto;border:1px solid #d5e3ec;border-radius:12px;padding:12px;background:#fff"><h3 style="text-align:center;margin:0 0 10px">${esc(EVENT_TITLE)}</h3><p style="text-align:center;font-size:.85rem">Posti massimi: ${maxSeats} · Totale persone: ${total()} · Posti disponibili: ${maxSeats-total()}</p><table style="width:100%;border-collapse:collapse;font-size:.85rem"><thead><tr><th style="border:1px solid #aaa;padding:6px">Nome e cognome</th><th style="border:1px solid #aaa;padding:6px">Persone</th>${notes?'<th style="border:1px solid #aaa;padding:6px">Note</th>':''}</tr></thead><tbody>${rows.map(r=>`<tr><td style="border:1px solid #aaa;padding:6px">${esc(r.fullName)}</td><td style="border:1px solid #aaa;padding:6px;text-align:center">${r.seats}</td>${notes?`<td style="border:1px solid #aaa;padding:6px">${esc(r.notes)}</td>`:''}</tr>`).join('')}</tbody></table></div><div class="modal-actions" style="margin-top:14px"><button type="button" class="btn secondary" data-close>CHIUDI</button><button id="confirmPrint" class="btn primary">STAMPA</button></div></div></div>`;
   document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$('#modalHost').innerHTML='');
-  $('#confirmPrint').onclick=()=>{buildPrintArea();setTimeout(()=>window.print(),50)};
+  $('#confirmPrint').onclick=async()=>{
+    buildPrintArea();
+    const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if(!isMobile){
+      $('#modalHost').innerHTML='';
+      window.print();
+      return;
+    }
+    try{
+      const {jsPDF}=window.jspdf,rows=sortRows(reservations,'surname-asc'),notes=$('#includeNotes').checked,orientation=notes?'landscape':'portrait',doc=new jsPDF({unit:'mm',format:'a4',orientation}),pageWidth=doc.internal.pageSize.getWidth(),margin=12,usableWidth=pageWidth-(margin*2);
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text(EVENT_TITLE,margin,17,{maxWidth:usableWidth});
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text(`Posti massimi: ${maxSeats}   Totale persone: ${total()}   Posti disponibili: ${maxSeats-total()}`,margin,26,{maxWidth:usableWidth});
+      const personWidth=24,noteWidth=notes?Math.max(55,usableWidth*.42):0,nameWidth=usableWidth-personWidth-noteWidth;
+      doc.autoTable({startY:33,margin:{left:margin,right:margin},tableWidth:usableWidth,head:[notes?['Nome e cognome','Persone','Note']:['Nome e cognome','Persone']],body:rows.map(r=>notes?[r.fullName,String(r.seats),r.notes]:[r.fullName,String(r.seats)]),foot:[notes?['TOTALE PERSONE',String(total()),'']:['TOTALE PERSONE',String(total())]],styles:{font:'helvetica',fontSize:10,cellPadding:2.4,overflow:'linebreak',valign:'middle'},headStyles:{fillColor:[6,106,168],fontStyle:'bold'},footStyles:{fillColor:[234,245,252],textColor:[0,40,75],fontStyle:'bold'},columnStyles:notes?{0:{cellWidth:nameWidth},1:{halign:'center',cellWidth:personWidth},2:{cellWidth:noteWidth}}:{0:{cellWidth:nameWidth},1:{halign:'center',cellWidth:personWidth}},showHead:'everyPage'});
+      const blob=doc.output('blob'),file=new File([blob],'Festa-40-Anni-Club-Stampa.pdf',{type:'application/pdf'});
+      $('#modalHost').innerHTML='';
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Stampa lista partecipanti'});
+      }else{
+        const url=URL.createObjectURL(blob);
+        window.open(url,'_blank');
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+      }
+    }catch(err){
+      toast('Impossibile aprire la stampa. Riprova.',true);
+    }
+  };
 }
 function printList(){openPrintPreview()}
 function subscribe(){unsubSettings?.();unsubReservations?.();unsubSettings=onValue(ref(db,'settings/general'),async s=>{if(s.exists())maxSeats=s.val().maxSeats||DEFAULT_MAX;else await set(ref(db,'settings/general'),{maxSeats:DEFAULT_MAX,updatedAt:Date.now(),updatedBy:user.uid});render()},()=>toast('Errore durante il caricamento delle impostazioni.',true));unsubReservations=onValue(ref(db,'reservations'),s=>{const data=s.val()||{};reservations=Object.entries(data).map(([id,value])=>({id,...value}));render()},()=>toast('Errore durante il caricamento delle prenotazioni.',true))}
