@@ -18,6 +18,20 @@
 @media print{body{background:#fff}header,.offline,.summary,.warning,.toolbar,.list-head,.list,.export,.fab,.toast,.modal-bg{display:none!important}.app{padding:0}main{width:100%;padding:0}.print-only{display:block;color:#000}.print-head{position:relative;min-height:62px}.print-head img{position:absolute;left:0;top:0;width:54px;height:54px;object-fit:contain}.print-only h1{text-align:center;font-size:18pt;margin:0;padding-top:10px}.print-only p{text-align:center;font-size:10pt}.print-only table{width:100%;margin:18px 0 0;border-collapse:collapse;table-layout:fixed}.print-only th,.print-only td{border:1px solid #999;padding:6px;text-align:left}.print-only th:nth-child(2),.print-only td:nth-child(2),.print-only th:nth-child(6),.print-only td:nth-child(6){width:42px;text-align:center}.print-only th:nth-child(3),.print-only td:nth-child(3),.print-only th:nth-child(7),.print-only td:nth-child(7){width:52px;text-align:center}.print-only th:nth-child(4),.print-only td:nth-child(4){width:28px;border:0!important;background:#fff!important;padding:0!important}@page{size:A4;margin:14mm}}
 /* Gestione riquadri e backup: aggiunte circoscritte */
 .summary{grid-template-columns:repeat(auto-fit,minmax(115px,1fr))}.summary article{position:relative}.summary article.summary-click{cursor:pointer}.config-panel{margin-top:12px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:16px}.config-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}.config-panel h2{margin:0 0 11px;font-size:1rem}.config-panel p{font-size:.8rem;color:#587084;margin:9px 0 0}.config-panel{padding:0}.config-disclosure>summary{list-style:none;cursor:pointer;padding:13px 15px;font-size:.9rem;font-weight:850;color:var(--blue);display:flex;align-items:center;justify-content:space-between}.config-disclosure>summary::-webkit-details-marker{display:none}.config-disclosure>summary::after{content:"▾";font-size:1.1rem}.config-disclosure[open]>summary::after{content:"▴"}.config-disclosure .config-buttons{padding:0 14px}.config-disclosure p{padding:0 14px 14px}.metric-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}.metric-row label{font-size:.8rem;font-weight:800}.metric-row button{min-height:36px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--blue)}
+
+/* Solo gestione riquadri su schermi piccoli: pulsante elimina sempre visibile. */
+@media (max-width:600px){
+ #cardEditorRows{width:100%;min-width:0}
+ #cardEditorRows .metric-row{grid-template-columns:minmax(0,1fr) 46px 46px;gap:8px;min-width:0;width:100%;align-items:center}
+ #cardEditorRows .metric-row>.field:first-child{grid-column:1/-1;min-width:0}
+ #cardEditorRows .metric-row>.field:first-child input{min-width:0;max-width:100%}
+ #cardEditorRows .metric-row>button[data-up]{grid-column:1;grid-row:2;justify-self:start;width:46px}
+ #cardEditorRows .metric-row>button[data-down]{grid-column:2;grid-row:2;width:46px}
+ #cardEditorRows .metric-row>button[data-remove]{grid-column:3;grid-row:2;width:46px;border-color:#f3bbb5;background:#fff8f7;color:var(--danger);font-size:1.15rem}
+ #cardEditorRows .metric-row>button{min-height:44px;touch-action:manipulation}
+ #cardEditorRows .metric-row>.checkbox{grid-column:1/-1!important}
+ #cardEditorRows .metric-row>.field:not(:first-child){grid-column:1/-1!important;min-width:0}
+}
 </style>
 </head>
 <body>
